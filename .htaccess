@@ -1,0 +1,143 @@
+AddDefaultCharset UTF-8
+Options -Indexes -MultiViews +FollowSymLinks
+ServerSignature Off
+
+### Блокировка прямого доступа к служебным файлам
+<FilesMatch "^\..*|\.(env|htaccess|htpasswd|ini|log|sh|sql|conf)$">
+  Require all denied
+</FilesMatch>
+
+### Разрешение доступа к оффлайн-странице
+<FilesMatch "^offline/index\.html$">
+  Require all granted
+  Header set Cache-Control "no-cache"
+</FilesMatch>
+
+### Настройки mod_rewrite
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  ### HTTPS + удаление www
+  RewriteCond %{HTTPS} off [OR]
+  RewriteCond %{HTTP_HOST} ^www\. [NC]
+  RewriteRule ^ https://170100.ru%{REQUEST_URI} [L,R=301,NE]
+
+  ### Блокировка прямого доступа к страницам ошибок
+  RewriteCond %{ENV:REDIRECT_STATUS} ^$
+  RewriteRule ^\.system-pages/(400|401|403|404|500|502)/index\.html$ - [F,L]
+
+  ### Удаление index.html из URL
+  RewriteCond %{THE_REQUEST} \s/index\.html [NC]
+  RewriteRule ^(.*?)index\.html$ /$1 [L,R=301,NC]
+
+  ### Обработка множественных слешей
+  RewriteCond %{THE_REQUEST} ^(?:GET|POST)\ //+([^\ ]*)
+  RewriteRule .* https://%{HTTP_HOST}/%1 [R=301,L]
+  RewriteCond %{REQUEST_URI} ^(.*)//(.*)$
+  RewriteRule . %1/%2 [R,L]
+
+  ### Удаление пустых query-параметров
+  RewriteCond %{THE_REQUEST} ^[^\s]+\s+[^?]*?\?
+  RewriteCond %{QUERY_STRING} ^$
+  RewriteRule .? %{REQUEST_URI}? [R=301,L]
+
+  ### Добавление слеша для директорий
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_URI} !(\.\w+$|/|offline/index\.html$)
+  RewriteRule [^/]$ %{REQUEST_URI}/ [R=301,L]
+</IfModule>
+
+### Настройки MIME-типов
+<IfModule mod_mime.c>
+  AddType image/jpeg .jpg .jpeg .jpe
+  AddType image/png .png
+  AddType image/gif .gif
+  AddType image/webp .webp
+  AddType image/svg+xml .svg .svgz
+  AddType image/bmp .bmp
+  AddType image/tiff .tif .tiff
+  AddType image/x-icon .ico
+  AddType image/apng .apng
+  AddType image/heif .heif .heic
+  AddType image/avif .avif
+  AddEncoding gzip .svgz
+  
+  AddType application/javascript .js
+  AddType text/css .css
+  AddType font/ttf .ttf
+  AddType font/woff .woff
+  AddType font/woff2 .woff2
+</IfModule>
+
+### Кэширование
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpg "access 1 year"
+  ExpiresByType image/jpeg "access 1 year"
+  ExpiresByType image/gif "access 1 year"
+  ExpiresByType image/png "access 1 year"
+  ExpiresByType image/webp "access 1 year"
+  ExpiresByType image/svg+xml "access 1 year"
+  ExpiresByType image/bmp "access 1 year"
+  ExpiresByType image/tiff "access 1 year"
+  ExpiresByType image/x-icon "access 1 year"
+  ExpiresByType image/apng "access 1 year"
+  ExpiresByType image/heif "access 1 year"
+  ExpiresByType image/avif "access 1 year"
+  ExpiresByType text/css "access 1 year"
+  ExpiresByType application/javascript "access 1 year"
+  ExpiresByType application/pdf "access 1 month"
+  ExpiresByType font/ttf "access 1 year"
+  ExpiresByType font/woff "access 1 year"
+  ExpiresByType font/woff2 "access 1 year"
+  ExpiresByType text/html "access 1 hour"
+  ExpiresDefault "access 2 days"
+</IfModule>
+
+### Сжатие
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE \
+    text/html \
+    text/plain \
+    text/xml \
+    text/css \
+    application/javascript \
+    application/json \
+    application/xml \
+    application/rss+xml \
+    font/ttf \
+    font/woff \
+    font/woff2 \
+    image/svg+xml
+</IfModule>
+
+### Заголовки безопасности
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; worker-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+  Header always set Permissions-Policy "geolocation=(), microphone=(), camera=(), payment=()"
+
+  <FilesMatch "\.(ico|jpg|jpeg|png|gif|webp|bmp|tiff|svg|apng|heif|heic|avif|css|js|woff|woff2|ttf)$">
+    Header set Cache-Control "max-age=31536000, public, immutable"
+  </FilesMatch>
+
+  <FilesMatch "serviceWorker\.js$">
+    Header set Service-Worker-Allowed "/"
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+### Страницы ошибок
+ErrorDocument 400 /.system-pages/400/index.html
+ErrorDocument 401 /.system-pages/401/index.html
+ErrorDocument 403 /.system-pages/403/index.html
+ErrorDocument 404 /.system-pages/404/index.html
+ErrorDocument 500 /.system-pages/500/index.html
+ErrorDocument 502 /.system-pages/502/index.html
+ErrorDocument 503 /offline/index.html
+
+### Установка переменной окружения
+SetEnv SERVER_ADMIN info@alean.ru
