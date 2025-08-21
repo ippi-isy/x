@@ -389,10 +389,19 @@ class Slider {
             const elState = this.#state.els.find(el => el.el === item);
             const currentTranslate = elState ? elState.translate : 0;
 
-            // Применяем только увеличение при hover
-            item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.05)`;
-            item.style.transformOrigin = 'center center';
-            item.style.zIndex = '50';
+            // Находим активный элемент
+            const activeIndex = this.#state.activeItems.findIndex(state => state === 1);
+            const isNextToActive = Math.abs(index - activeIndex) === 1;
+
+            // Применяем увеличение
+            item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.1)`;
+            item.style.marginRight = '';
+
+            // Для элементов рядом с активным - особый отступ
+            item.style.marginLeft = isNextToActive ? '' : '';
+
+            // Поднимаем элемент над остальными
+            item.style.zIndex = '10';
           }
         };
 
@@ -401,9 +410,10 @@ class Slider {
             const elState = this.#state.els.find(el => el.el === item);
             const currentTranslate = elState ? elState.translate : 0;
 
-            // Возвращаем обычное состояние
+            // Возвращаем все свойства к исходным значениям
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px)`;
-            item.style.transformOrigin = '';
+            item.style.marginRight = '';
+            item.style.marginLeft = '';
             item.style.zIndex = '';
           }
         };
@@ -576,15 +586,12 @@ class Slider {
       if (this.#config.scale) {
         if (isActive) {
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px) scale(1.1)`
-          item.style.transformOrigin = 'center center'
-          item.style.zIndex = '100'
-          item.style.position = 'relative'
         } else {
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px)`
-          item.style.transformOrigin = ''
-          item.style.zIndex = ''
-          item.style.position = ''
         }
+        item.style.transformOrigin = isActive ? 'center center' : ''
+        item.style.zIndex = isActive ? '100' : ''
+        item.style.position = isActive ? 'relative' : ''
       }
     })
   }
