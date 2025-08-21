@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тест Scale функциональности</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .slider {
+            position: relative;
+            z-index: 10;
+            max-width: 800px;
+            width: 100%;
+            margin: 50px auto;
+        }
+        
+        .slider__wrapper {
+            overflow: hidden;
+            margin-top: 24px;
+            display: flex;
+            align-items: center;
+            height: 300px;
+        }
+        
+        .slider__items {
+            display: flex;
+            transition: transform 0.3s ease;
+            will-change: transform;
+            align-items: center;
+        }
+        
+        .slider__item {
+            flex: 0 0 200px;
+            position: relative;
+            user-select: none;
+            will-change: transform;
+            backface-visibility: hidden;
+            transform-origin: center center;
+            display: flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            max-width: 200px;
+            margin-right: 24px;
+            height: 280px;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        
+        .slider__image {
+            width: 100%;
+            height: 200px;
+            background: linear-gradient(45deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px 12px 0 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .slider__text {
+            padding: 20px;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .slider__navigation {
+            display: flex;
+            gap: 16px;
+            margin-top: 40px;
+            justify-content: center;
+        }
+        
+        .button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s ease;
+        }
+        
+        .button:hover {
+            background: #5a6fd8;
+        }
+        
+        .test-info {
+            background: #fff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .test-info h2 {
+            color: #333;
+            margin-bottom: 15px;
+        }
+        
+        .test-info ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .test-info li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .test-info li:last-child {
+            border-bottom: none;
+        }
+        
+        .slider-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .slider-with-scale {
+            border: 3px solid #667eea;
+        }
+        
+        .slider-without-scale {
+            border: 3px solid #28a745;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="test-info">
+            <h2>Тест Scale функциональности слайдера</h2>
+            <ul>
+                <li>✅ <strong>Слайдер с Scale (data-scale="true")</strong>: активный элемент увеличен (1.1x), hover эффект (1.05x)</li>
+                <li>✅ <strong>Слайдер без Scale</strong>: обычная функциональность без эффектов</li>
+                <li>✅ Стрелки работают корректно</li>
+                <li>✅ Свайп мышью работает корректно</li>
+            </ul>
+        </div>
+        
+        <!-- Слайдер С Scale -->
+        <div class="slider-title">Слайдер С Scale (data-scale="true")</div>
+        <div class="slider slider-with-scale" data-slider="slider" data-loop="true" data-scale="true" data-autoplay="true">
+            <div class="slider__navigation">
+                <button class="button slider__button-prev" aria-label="Предыдущий слайд">
+                    ← Назад
+                </button>
+                <button class="button slider__button-next" aria-label="Следующий слайд">
+                    Вперед →
+                </button>
+            </div>
+            <div class="slider__wrapper">
+                <div class="slider__items">
+                    <div class="slider__item">
+                        <div class="slider__image">1</div>
+                        <div class="slider__text">Слайд 1</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">2</div>
+                        <div class="slider__text">Слайд 2</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">3</div>
+                        <div class="slider__text">Слайд 3</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">4</div>
+                        <div class="slider__text">Слайд 4</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Слайдер БЕЗ Scale -->
+        <div class="slider-title">Слайдер БЕЗ Scale (без data-scale)</div>
+        <div class="slider slider-without-scale" data-slider="slider" data-loop="true" data-autoplay="true">
+            <div class="slider__navigation">
+                <button class="button slider__button-prev" aria-label="Предыдущий слайд">
+                    ← Назад
+                </button>
+                <button class="button slider__button-next" aria-label="Следующий слайд">
+                    Вперед →
+                </button>
+            </div>
+            <div class="slider__wrapper">
+                <div class="slider__items">
+                    <div class="slider__item">
+                        <div class="slider__image">A</div>
+                        <div class="slider__text">Слайд A</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">B</div>
+                        <div class="slider__text">Слайд B</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">C</div>
+                        <div class="slider__text">Слайд C</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">D</div>
+                        <div class="slider__text">Слайд D</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="./assets/js/slider.js"></script>
+</body>
+</html>
