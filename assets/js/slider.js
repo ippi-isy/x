@@ -45,6 +45,8 @@ class Slider {
    * @param {String} prefix
    */
   constructor(el, config = {}, prefix = 'slider__') {
+    console.log('Slider constructor called with:', { el, config, prefix })
+    
     this.#state = {
       prefix,
       el,
@@ -85,6 +87,9 @@ class Slider {
       ...config
     }
 
+    console.log('Slider state:', this.#state)
+    console.log('Slider config:', this.#config)
+
     this.#init()
     this.#attachEvents()
   }
@@ -120,7 +125,12 @@ class Slider {
   }
 
   static createInstances() {
-    document.querySelectorAll('[data-slider="slider"]').forEach(el => {
+    console.log('Creating slider instances...')
+    const sliders = document.querySelectorAll('[data-slider="slider"]')
+    console.log('Found sliders:', sliders.length)
+    
+    sliders.forEach((el, index) => {
+      console.log(`Processing slider ${index}:`, el)
       const { dataset } = el
       const params = {}
       Object.keys(dataset).forEach(key => {
@@ -133,21 +143,25 @@ class Slider {
         value = value === 'false' ? false : value
         params[key] = value
       })
+      console.log(`Slider ${index} params:`, params)
       this.getOrCreateInstance(el, params)
     })
   }
 
   slideNext() {
+    console.log('slideNext called')
     this.#state.direction = 'next'
     this.#move()
   }
 
   slidePrev() {
+    console.log('slidePrev called')
     this.#state.direction = 'prev'
     this.#move()
   }
 
   slideTo(index) {
+    console.log('slideTo called with index:', index)
     this.#moveTo(index)
   }
 
@@ -206,6 +220,7 @@ class Slider {
   }
 
   #onClick(e) {
+    console.log('onClick called:', e.target)
     if (this.#state.isMoving) {
       e.preventDefault()
     }
@@ -227,6 +242,7 @@ class Slider {
       this.#state.direction = e.target.closest(`.${classbuttonPrev}`)
         ? 'prev'
         : 'next'
+      console.log('Button clicked, direction:', this.#state.direction)
       this.#move()
     } else if (e.target.dataset.slideTo) {
       const index = parseInt(e.target.dataset.slideTo, 10)
@@ -339,22 +355,6 @@ class Slider {
       this.#autoplay()
     }
     this.#state.isBalancing = false
-    
-    // Корректируем позицию с учетом scale после touch событий
-    if (this.#config.scale) {
-      const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
-      if (activeIndex !== -1) {
-        const activeItem = this.#state.elListItem[activeIndex]
-        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
-        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
-        const marginDiff = activeMargin - baseMargin
-        
-        if (marginDiff !== 0) {
-          this.#state.translate += marginDiff
-          this.#state.elItems.style.transform = `translate3D(${this.#state.translate}px, 0px, 0.1px)`
-        }
-      }
-    }
   }
 
   #touchMove(e) {
@@ -388,21 +388,8 @@ class Slider {
     const transitionNoneClass =
       this.#state.prefix + this.constructor.#TRANSITION_NONE
     this.#state.elItems.classList.add(transitionNoneClass)
-    
-    // Корректируем позицию с учетом scale отступов
-    let adjustedTranslate = this.#state.translate - diffPosX
-    if (this.#config.scale) {
-      const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
-      if (activeIndex !== -1) {
-        const activeItem = this.#state.elListItem[activeIndex]
-        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
-        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
-        const marginDiff = activeMargin - baseMargin
-        adjustedTranslate += marginDiff
-      }
-    }
-    
-    this.#state.elItems.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
+    const translate = this.#state.translate - diffPosX
+    this.#state.elItems.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
     if (this.#config.loop) {
       this.#state.direction = diffPosX > 0 ? 'next' : 'prev'
       this.#state.direction = direction
@@ -413,8 +400,11 @@ class Slider {
   }
 
   #attachEvents() {
+    console.log('Attaching events...')
+    
     // Применяем scale эффекты только если включен
     if (this.#config.scale) {
+      console.log('Scale enabled, setting up hover effects')
       const activeClass = this.#state.prefix + this.constructor.#EL_ITEM_ACTIVE;
       this.#state.hoverHandlers = [];
 
@@ -524,6 +514,8 @@ class Slider {
       window.requestAnimationFrame(this.#reset.bind(this))
     })
     this.#resizeObserver.observe(this.#state.elWrapper)
+    
+    console.log('Events attached successfully')
   }
 
   #detachEvents() {
@@ -583,21 +575,7 @@ class Slider {
         const translate =
           this.#state.exTranslateMin + countItems * this.#state.width
         elFound.translate = translate
-        
-        // Корректируем позицию с учетом scale
-        let adjustedTranslate = translate
-        if (this.#config.scale) {
-          const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
-          if (activeIndex !== -1) {
-            const activeItem = this.#state.elListItem[activeIndex]
-            const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
-            const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
-            const marginDiff = activeMargin - baseMargin
-            adjustedTranslate += marginDiff
-          }
-        }
-        
-        this.#state.exItemMin.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
+        this.#state.exItemMin.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
         this.#updateExProperties()
       }
     } else {
@@ -610,21 +588,7 @@ class Slider {
         const translate =
           this.#state.exTranslateMax - countItems * this.#state.width
         elFound.translate = translate
-        
-        // Корректируем позицию с учетом scale
-        let adjustedTranslate = translate
-        if (this.#config.scale) {
-          const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
-          if (activeIndex !== -1) {
-            const activeItem = this.#state.elListItem[activeIndex]
-            const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
-            const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
-            const marginDiff = activeMargin - baseMargin
-            adjustedTranslate += marginDiff
-          }
-        }
-        
-        this.#state.exItemMax.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
+        this.#state.exItemMax.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
         this.#updateExProperties()
       }
     }
@@ -680,6 +644,8 @@ class Slider {
   }
 
   #move() {
+    console.log('move called with direction:', this.#state.direction)
+    
     if (this.#state.direction === 'none') {
       const transform = this.#state.translate
       this.#state.elItems.style.transform = `translate3D(${transform}px, 0px, 0.1px)`
@@ -738,9 +704,12 @@ class Slider {
     
     this.#state.translate = adjustedTransform
     this.#state.elItems.style.transform = `translate3D(${adjustedTransform}px, 0px, 0.1px)`
+    
+    console.log('Move completed, new translate:', this.#state.translate)
   }
 
   #moveTo(index) {
+    console.log('moveTo called with index:', index)
     const delta = this.#state.activeItems.reduce(
       (acc, current, currentIndex) => {
         const diff = current ? index - currentIndex : acc
@@ -772,6 +741,7 @@ class Slider {
   }
 
   #init() {
+    console.log('Initializing slider...')
     this.#state.els = []
     this.#state.translate = 0
     this.#state.activeItems = new Array(this.#state.elListItem.length).fill(0)
@@ -818,6 +788,8 @@ class Slider {
 
     this.#updateClasses()
     this.#autoplay()
+    
+    console.log('Slider initialized successfully')
   }
 
   #reset() {
@@ -873,4 +845,19 @@ class Slider {
   }
 }
 
-Slider.createInstances()
+// Инициализируем слайдеры после загрузки DOM
+document.addEventListener('DOMContentLoaded', () => {
+  console.log('DOM loaded, creating slider instances...')
+  Slider.createInstances()
+})
+
+// Также вызываем для случаев, когда DOM уже загружен
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM loaded, creating slider instances...')
+    Slider.createInstances()
+  })
+} else {
+  console.log('DOM already loaded, creating slider instances...')
+  Slider.createInstances()
+}
