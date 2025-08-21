@@ -177,10 +177,21 @@ class Slider {
     this.#autoplay('stop')
     this.#state.elItems.classList.add(transitionNoneClass)
     this.#state.elItems.style.transform = ''
+    
+    // Очищаем все scale стили
     this.#state.elListItem.forEach(el => {
       el.style.transform = ''
       el.classList.remove(activeClass)
+      
+      if (this.#config.scale) {
+        el.style.transformOrigin = ''
+        el.style.zIndex = ''
+        el.style.position = ''
+        el.style.marginRight = ''
+        el.style.transition = ''
+      }
     })
+    
     const selIndicators = `${this.#state.prefix}${this.constructor.#EL_INDICATOR_ACTIVE
       }`
     document.querySelectorAll(`.${selIndicators}`).forEach(el => {
@@ -328,6 +339,22 @@ class Slider {
       this.#autoplay()
     }
     this.#state.isBalancing = false
+    
+    // Корректируем позицию с учетом scale после touch событий
+    if (this.#config.scale) {
+      const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
+      if (activeIndex !== -1) {
+        const activeItem = this.#state.elListItem[activeIndex]
+        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+        const marginDiff = activeMargin - baseMargin
+        
+        if (marginDiff !== 0) {
+          this.#state.translate += marginDiff
+          this.#state.elItems.style.transform = `translate3D(${this.#state.translate}px, 0px, 0.1px)`
+        }
+      }
+    }
   }
 
   #touchMove(e) {
@@ -361,8 +388,21 @@ class Slider {
     const transitionNoneClass =
       this.#state.prefix + this.constructor.#TRANSITION_NONE
     this.#state.elItems.classList.add(transitionNoneClass)
-    const translate = this.#state.translate - diffPosX
-    this.#state.elItems.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
+    
+    // Корректируем позицию с учетом scale отступов
+    let adjustedTranslate = this.#state.translate - diffPosX
+    if (this.#config.scale) {
+      const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
+      if (activeIndex !== -1) {
+        const activeItem = this.#state.elListItem[activeIndex]
+        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+        const marginDiff = activeMargin - baseMargin
+        adjustedTranslate += marginDiff
+      }
+    }
+    
+    this.#state.elItems.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
     if (this.#config.loop) {
       this.#state.direction = diffPosX > 0 ? 'next' : 'prev'
       this.#state.direction = direction
@@ -388,20 +428,16 @@ class Slider {
           if (!item.classList.contains(activeClass)) {
             const elState = this.#state.els.find(el => el.el === item);
             const currentTranslate = elState ? elState.translate : 0;
+            const currentMargin = parseFloat(getComputedStyle(item).marginRight) || 0;
 
-            // Находим активный элемент
-            const activeIndex = this.#state.activeItems.findIndex(state => state === 1);
-            const isNextToActive = Math.abs(index - activeIndex) === 1;
-
-            // Применяем увеличение
-            item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.1)`;
-            item.style.marginRight = '';
-
-            // Для элементов рядом с активным - особый отступ
-            item.style.marginLeft = isNextToActive ? '' : '';
-
-            // Поднимаем элемент над остальными
-            item.style.zIndex = '10';
+            // Применяем увеличение только к неактивным элементам
+            item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.05)`;
+            item.style.transformOrigin = 'center center';
+            item.style.zIndex = '50';
+            item.style.position = 'relative';
+            
+            // Увеличиваем отступ для hover эффекта
+            item.style.marginRight = `${currentMargin * 1.05}px`;
           }
         };
 
@@ -409,12 +445,16 @@ class Slider {
           if (!item.classList.contains(activeClass)) {
             const elState = this.#state.els.find(el => el.el === item);
             const currentTranslate = elState ? elState.translate : 0;
+            const originalMargin = parseFloat(getComputedStyle(item).marginRight) || 0;
 
             // Возвращаем все свойства к исходным значениям
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px)`;
-            item.style.marginRight = '';
-            item.style.marginLeft = '';
+            item.style.transformOrigin = '';
             item.style.zIndex = '';
+            item.style.position = '';
+            
+            // Возвращаем оригинальный отступ
+            item.style.marginRight = `${originalMargin}px`;
           }
         };
 
@@ -542,7 +582,21 @@ class Slider {
         const translate =
           this.#state.exTranslateMin + countItems * this.#state.width
         elFound.translate = translate
-        this.#state.exItemMin.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
+        
+        // Корректируем позицию с учетом scale
+        let adjustedTranslate = translate
+        if (this.#config.scale) {
+          const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
+          if (activeIndex !== -1) {
+            const activeItem = this.#state.elListItem[activeIndex]
+            const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+            const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+            const marginDiff = activeMargin - baseMargin
+            adjustedTranslate += marginDiff
+          }
+        }
+        
+        this.#state.exItemMin.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
         this.#updateExProperties()
       }
     } else {
@@ -555,7 +609,21 @@ class Slider {
         const translate =
           this.#state.exTranslateMax - countItems * this.#state.width
         elFound.translate = translate
-        this.#state.exItemMax.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
+        
+        // Корректируем позицию с учетом scale
+        let adjustedTranslate = translate
+        if (this.#config.scale) {
+          const activeIndex = this.#state.activeItems.findIndex(item => item === 1)
+          if (activeIndex !== -1) {
+            const activeItem = this.#state.elListItem[activeIndex]
+            const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+            const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+            const marginDiff = activeMargin - baseMargin
+            adjustedTranslate += marginDiff
+          }
+        }
+        
+        this.#state.exItemMax.style.transform = `translate3D(${adjustedTranslate}px, 0px, 0.1px)`
         this.#updateExProperties()
       }
     }
@@ -585,13 +653,23 @@ class Slider {
 
       if (this.#config.scale) {
         if (isActive) {
+          // Применяем scale к активному элементу
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px) scale(1.1)`
+          item.style.transformOrigin = 'center center'
+          item.style.zIndex = '100'
+          item.style.position = 'relative'
+          
+          // Увеличиваем отступ справа для активного элемента
+          const margin = parseFloat(getComputedStyle(item).marginRight) || 0
+          item.style.marginRight = `${margin * 1.1}px`
         } else {
+          // Возвращаем обычное состояние для неактивных элементов
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px)`
+          item.style.transformOrigin = ''
+          item.style.zIndex = ''
+          item.style.position = ''
+          item.style.marginRight = ''
         }
-        item.style.transformOrigin = isActive ? 'left' : ''
-        item.style.zIndex = isActive ? '100' : ''
-        item.style.position = isActive ? 'relative' : ''
       }
     })
   }
@@ -638,9 +716,23 @@ class Slider {
         this.#state.elListItem.length
     this.#state.activeItems[nextActiveIndex] = 1
 
+    // Обновляем классы и применяем scale эффекты
     this.#updateClasses()
-    this.#state.translate = transform
-    this.#state.elItems.style.transform = `translate3D(${transform}px, 0px, 0.1px)`
+    
+    // Корректируем позицию с учетом scale отступов
+    let adjustedTransform = transform
+    if (this.#config.scale) {
+      const activeItem = this.#state.elListItem[nextActiveIndex]
+      if (activeItem) {
+        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+        const marginDiff = activeMargin - baseMargin
+        adjustedTransform += marginDiff
+      }
+    }
+    
+    this.#state.translate = adjustedTransform
+    this.#state.elItems.style.transform = `translate3D(${adjustedTransform}px, 0px, 0.1px)`
   }
   #moveTo(index) {
     const delta = this.#state.activeItems.reduce(
@@ -654,6 +746,21 @@ class Slider {
       this.#state.direction = delta > 0 ? 'next' : 'prev'
       for (let i = 0; i < Math.abs(delta); i++) {
         this.#move()
+      }
+    }
+    
+    // Корректируем финальную позицию с учетом scale
+    if (this.#config.scale) {
+      const activeItem = this.#state.elListItem[index]
+      if (activeItem) {
+        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 0
+        const baseMargin = parseFloat(getComputedStyle(this.#state.elListItem[0]).marginRight) || 0
+        const marginDiff = activeMargin - baseMargin
+        
+        if (marginDiff !== 0) {
+          this.#state.translate += marginDiff
+          this.#state.elItems.style.transform = `translate3D(${this.#state.translate}px, 0px, 0.1px)`
+        }
       }
     }
   }
@@ -675,6 +782,13 @@ class Slider {
 
     this.#state.elListItem.forEach((el, index) => {
       el.style.transform = ''
+      
+      // Инициализируем стили для scale функциональности
+      if (this.#config.scale) {
+        el.style.transformOrigin = 'center center'
+        el.style.transition = 'transform 0.3s ease, margin 0.3s ease'
+      }
+      
       this.#state.els.push({
         el,
         index,
@@ -719,6 +833,19 @@ class Slider {
     this.#autoplay('stop')
     this.#state.elItems.classList.add(transitionNoneClass)
     this.#state.elItems.style.transform = 'translate3D(0px, 0px, 0.1px)'
+    
+    // Сбрасываем стили scale перед инициализацией
+    if (this.#config.scale) {
+      this.#state.elListItem.forEach(el => {
+        el.style.transform = ''
+        el.style.transformOrigin = ''
+        el.style.zIndex = ''
+        el.style.position = ''
+        el.style.marginRight = ''
+        el.style.transition = ''
+      })
+    }
+    
     this.#init()
     window.requestAnimationFrame(() => {
       this.#state.elItems.classList.remove(transitionNoneClass)
