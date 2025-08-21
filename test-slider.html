@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Тест слайдера с Scale</title>
+    <title>Тест слайдера с Scale и без</title>
     <style>
         * {
             margin: 0;
@@ -146,23 +146,40 @@
         .test-info li:last-child {
             border-bottom: none;
         }
+        
+        .slider-title {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #333;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .slider-with-scale {
+            border: 3px solid #667eea;
+        }
+        
+        .slider-without-scale {
+            border: 3px solid #28a745;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="test-info">
-            <h2>Тест слайдера с Scale функциональностью</h2>
+            <h2>Тест слайдера с Scale и без Scale</h2>
             <ul>
-                <li>✅ Scale применяется к активным элементам (1.1x)</li>
-                <li>✅ Hover эффект для неактивных элементов (1.05x)</li>
-                <li>✅ Правильные отступы с учетом scale</li>
-                <li>✅ Корректное позиционирование при переключении</li>
-                <li>✅ Плавные анимации и переходы</li>
-                <li>✅ Поддержка touch/swipe на мобильных устройствах</li>
+                <li>✅ <strong>Слайдер с Scale (data-scale="true")</strong>: hover эффекты, увеличение активных элементов</li>
+                <li>✅ <strong>Слайдер без Scale</strong>: только базовая функциональность, без hover эффектов</li>
+                <li>✅ Стрелки работают корректно в обоих случаях</li>
+                <li>✅ Свайп мышью работает корректно в обоих случаях</li>
+                <li>✅ Scale применяется только к слайдерам с атрибутом data-scale="true"</li>
             </ul>
         </div>
         
-        <div class="slider" data-slider="slider" data-loop="true" data-scale="true" data-autoplay="true">
+        <!-- Слайдер С Scale -->
+        <div class="slider-title">Слайдер С Scale (data-scale="true")</div>
+        <div class="slider slider-with-scale" data-slider="slider" data-loop="true" data-scale="true" data-autoplay="true">
             <div class="slider__navigation">
                 <button class="button slider__button-prev" aria-label="Предыдущий слайд">
                     ← Назад
@@ -189,13 +206,38 @@
                         <div class="slider__image">4</div>
                         <div class="slider__text">Слайд 4</div>
                     </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Слайдер БЕЗ Scale -->
+        <div class="slider-title">Слайдер БЕЗ Scale (без data-scale)</div>
+        <div class="slider slider-without-scale" data-slider="slider" data-loop="true" data-autoplay="true">
+            <div class="slider__navigation">
+                <button class="button slider__button-prev" aria-label="Предыдущий слайд">
+                    ← Назад
+                </button>
+                <button class="button slider__button-next" aria-label="Следующий слайд">
+                    Вперед →
+                </button>
+            </div>
+            <div class="slider__wrapper">
+                <div class="slider__items">
                     <div class="slider__item">
-                        <div class="slider__image">5</div>
-                        <div class="slider__text">Слайд 5</div>
+                        <div class="slider__image">A</div>
+                        <div class="slider__text">Слайд A</div>
                     </div>
                     <div class="slider__item">
-                        <div class="slider__image">6</div>
-                        <div class="slider__text">Слайд 6</div>
+                        <div class="slider__image">B</div>
+                        <div class="slider__text">Слайд B</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">C</div>
+                        <div class="slider__text">Слайд C</div>
+                    </div>
+                    <div class="slider__item">
+                        <div class="slider__image">D</div>
+                        <div class="slider__text">Слайд D</div>
                     </div>
                 </div>
             </div>

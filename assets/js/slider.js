@@ -413,6 +413,7 @@ class Slider {
   }
 
   #attachEvents() {
+    // Применяем scale эффекты только если включен
     if (this.#config.scale) {
       const activeClass = this.#state.prefix + this.constructor.#EL_ITEM_ACTIVE;
       this.#state.hoverHandlers = [];
@@ -651,6 +652,7 @@ class Slider {
       item.classList.toggle(activeClass, isActive)
       if (indicator) indicator.classList.toggle(indicatorActiveClass, isActive)
 
+      // Применяем scale эффекты только если включены
       if (this.#config.scale) {
         if (isActive) {
           // Применяем scale к активному элементу
@@ -670,6 +672,9 @@ class Slider {
           item.style.position = ''
           item.style.marginRight = ''
         }
+      } else {
+        // Для слайдеров без scale - только базовое позиционирование
+        item.style.transform = `translate3D(${translateX}px, 0px, 0.1px)`
       }
     })
   }
@@ -734,6 +739,7 @@ class Slider {
     this.#state.translate = adjustedTransform
     this.#state.elItems.style.transform = `translate3D(${adjustedTransform}px, 0px, 0.1px)`
   }
+
   #moveTo(index) {
     const delta = this.#state.activeItems.reduce(
       (acc, current, currentIndex) => {
@@ -783,7 +789,7 @@ class Slider {
     this.#state.elListItem.forEach((el, index) => {
       el.style.transform = ''
       
-      // Инициализируем стили для scale функциональности
+      // Инициализируем стили для scale функциональности только если включена
       if (this.#config.scale) {
         el.style.transformOrigin = 'center center'
         el.style.transition = 'transform 0.3s ease, margin 0.3s ease'
@@ -813,6 +819,7 @@ class Slider {
     this.#updateClasses()
     this.#autoplay()
   }
+
   #reset() {
     const transitionNoneClass =
       this.#state.prefix + this.constructor.#TRANSITION_NONE
@@ -834,7 +841,7 @@ class Slider {
     this.#state.elItems.classList.add(transitionNoneClass)
     this.#state.elItems.style.transform = 'translate3D(0px, 0px, 0.1px)'
     
-    // Сбрасываем стили scale перед инициализацией
+    // Сбрасываем стили scale перед инициализацией только если включены
     if (this.#config.scale) {
       this.#state.elListItem.forEach(el => {
         el.style.transform = ''
