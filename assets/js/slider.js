@@ -352,7 +352,7 @@ class Slider {
     if (!this.#config.loop) {
       const isNotMoveFirst = this.#state.activeItems[0] === 1 && diffPosX <= 0
       const isNotMoveLast =
-        this.#state.activeItems[this.#state.elListItem.length - 1] &&
+        this.#state.activeItems[this.#state.activeItems.length - 1] &&
         diffPosX >= 0
       if (isNotMoveFirst || isNotMoveLast) {
         diffPosX /= 4
@@ -373,7 +373,6 @@ class Slider {
   }
 
   #attachEvents() {
-    // Добавляем hover эффекты только для слайдеров с scale
     if (this.#config.scale) {
       const activeClass = this.#state.prefix + this.constructor.#EL_ITEM_ACTIVE;
       this.#state.hoverHandlers = [];
@@ -390,12 +389,10 @@ class Slider {
             const elState = this.#state.els.find(el => el.el === item);
             const currentTranslate = elState ? elState.translate : 0;
 
-            // Применяем только увеличение к неактивным элементам при hover
+            // Применяем только увеличение при hover
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.05)`;
             item.style.transformOrigin = 'center center';
             item.style.zIndex = '50';
-            
-            // НЕ меняем отступы при hover - только scale эффект
           }
         };
 
@@ -408,8 +405,6 @@ class Slider {
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px)`;
             item.style.transformOrigin = '';
             item.style.zIndex = '';
-            
-            // Отступы не трогаем - они управляются в updateClasses
           }
         };
 
@@ -550,7 +545,6 @@ class Slider {
         const translate =
           this.#state.exTranslateMax - countItems * this.#state.width
         elFound.translate = translate
-        elFound.translate = translate
         this.#state.exItemMax.style.transform = `translate3D(${translate}px, 0px, 0.1px)`
         this.#updateExProperties()
       }
@@ -579,29 +573,18 @@ class Slider {
       item.classList.toggle(activeClass, isActive)
       if (indicator) indicator.classList.toggle(indicatorActiveClass, isActive)
 
-      // Применяем scale только если включен
       if (this.#config.scale) {
         if (isActive) {
-          // Активный элемент увеличен в 1.1 раза
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px) scale(1.1)`
           item.style.transformOrigin = 'center center'
           item.style.zIndex = '100'
-          
-          // Увеличиваем отступ для активного элемента (в 2 раза)
-          item.style.marginRight = '48px'; // 24px * 2
+          item.style.position = 'relative'
         } else {
-          // Неактивные элементы в обычном размере
           item.style.transform = `translate3D(${translateX}px, 0px, 0.1px)`
           item.style.transformOrigin = ''
           item.style.zIndex = ''
-          
-          // Базовый отступ для неактивных элементов
-          item.style.marginRight = '24px';
+          item.style.position = ''
         }
-      } else {
-        // Для слайдеров без scale - только позиционирование
-        item.style.transform = `translate3D(${translateX}px, 0px, 0.1px)`
-        item.style.marginRight = '24px';
       }
     })
   }
@@ -649,29 +632,9 @@ class Slider {
     this.#state.activeItems[nextActiveIndex] = 1
 
     this.#updateClasses()
-    
-    // Корректируем позицию с учетом scale отступов
-    let adjustedTransform = transform
-    if (this.#config.scale) {
-      // Находим активный элемент
-      const activeItem = this.#state.elListItem[nextActiveIndex]
-      if (activeItem) {
-        // Получаем текущий отступ активного элемента
-        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 24
-        const baseMargin = 24 // базовый отступ
-        
-        // Корректируем позицию на разницу в отступах
-        if (activeMargin > baseMargin) {
-          const marginDiff = activeMargin - baseMargin
-          adjustedTransform += marginDiff
-        }
-      }
-    }
-    
-    this.#state.translate = adjustedTransform
-    this.#state.elItems.style.transform = `translate3D(${adjustedTransform}px, 0px, 0.1px)`
+    this.#state.translate = transform
+    this.#state.elItems.style.transform = `translate3D(${transform}px, 0px, 0.1px)`
   }
-
   #moveTo(index) {
     const delta = this.#state.activeItems.reduce(
       (acc, current, currentIndex) => {
@@ -684,21 +647,6 @@ class Slider {
       this.#state.direction = delta > 0 ? 'next' : 'prev'
       for (let i = 0; i < Math.abs(delta); i++) {
         this.#move()
-      }
-    }
-    
-    // Корректируем финальную позицию с учетом scale
-    if (this.#config.scale) {
-      const activeItem = this.#state.elListItem[index]
-      if (activeItem) {
-        const activeMargin = parseFloat(getComputedStyle(activeItem).marginRight) || 24
-        const baseMargin = 24
-        
-        if (activeMargin > baseMargin) {
-          const marginDiff = activeMargin - baseMargin
-          this.#state.translate += marginDiff
-          this.#state.elItems.style.transform = `translate3D(${this.#state.translate}px, 0px, 0.1px)`
-        }
       }
     }
   }
@@ -720,12 +668,6 @@ class Slider {
 
     this.#state.elListItem.forEach((el, index) => {
       el.style.transform = ''
-      
-      // Устанавливаем базовые отступы для всех элементов
-      if (this.#config.scale) {
-        el.style.marginRight = '24px';
-      }
-      
       this.#state.els.push({
         el,
         index,
@@ -750,7 +692,6 @@ class Slider {
     this.#updateClasses()
     this.#autoplay()
   }
-
   #reset() {
     const transitionNoneClass =
       this.#state.prefix + this.constructor.#TRANSITION_NONE
