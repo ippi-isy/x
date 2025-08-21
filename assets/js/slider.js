@@ -394,6 +394,10 @@ class Slider {
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px) scale(1.05)`;
             item.style.transformOrigin = 'center center';
             item.style.zIndex = '50';
+            
+            // Увеличиваем отступ для hover (в 1.5 раза)
+            const baseMargin = 24; // базовый отступ
+            item.style.marginRight = `${baseMargin * 1.5}px`;
           }
         };
 
@@ -406,6 +410,9 @@ class Slider {
             item.style.transform = `translate3D(${currentTranslate}px, 0px, 0.1px)`;
             item.style.transformOrigin = '';
             item.style.zIndex = '';
+            
+            // Возвращаем базовый отступ
+            item.style.marginRight = '24px';
           }
         };
 
